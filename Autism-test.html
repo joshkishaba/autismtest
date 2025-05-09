@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Psychological Self-Assessment Tools</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-selection {
+            text-align: center;
+            margin: 40px 0;
+        }
+        .test-button {
+            display: block;
+            width: 80%;
+            max-width: 400px;
+            margin: 20px auto;
+            padding: 20px;
+            font-size: 1.2em;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .test-button:hover {
+            background-color: #45a049;
+        }
+        .question-container {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            display: none;
+        }
+        .active {
+            display: block;
+        }
+        .options {
+            margin-top: 15px;
+        }
+        .option {
+            margin: 10px 0;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #results {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .progress {
+            width: 0%;
+            height: 100%;
+            background-color: #4CAF50;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+        .disclaimer {
+            font-style: italic;
+            color: #666;
+            margin-top: 20px;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div id="test-selection" class="test-selection">
+        <h1>Psychological Self-Assessment Tools</h1>
+        <p>Please select a test to begin:</p>
+        <button class="test-button" onclick="selectTest('autism')">Autism Spectrum Test</button>
+        <button class="test-button" onclick="selectTest('adhd')">ADHD Self-Assessment</button>
+        <button class="test-button" onclick="selectTest('mbti')">Myers-Briggs Personality Test</button>
+    </div>
+
+    <div id="test-container" style="display: none;">
+        <h1 id="test-title"></h1>
+        <p id="test-description"></p>
+        <div class="progress-bar">
+            <div class="progress" id="progressBar"></div>
+        </div>
+        <div id="questions-container"></div>
+        <div id="results">
+            <h2>Your Results</h2>
+            <p id="resultText"></p>
+            <div class="disclaimer" id="disclaimer"></div>
+            <button onclick="restartAssessment()">Take Another Test</button>
+        </div>
+    </div>
+
+    <script>
+        const tests = {
+            autism: {
+                title: "Autism Spectrum Self-Assessment",
+                description: "This assessment helps identify traits commonly associated with autism spectrum disorder (ASD).",
+                questions: [
+                    {
+                        question: "How do you feel about making eye contact during conversations?",
+                        options: [
+                            { text: "Very comfortable, I maintain eye contact naturally", score: 1 },
+                            { text: "Somewhat comfortable, but I need to think about it", score: 2 },
+                            { text: "Neutral, I can do it but it feels unnatural", score: 3 },
+                            { text: "Uncomfortable, I avoid it when possible", score: 4 },
+                            { text: "Very uncomfortable, I find it extremely difficult", score: 5 }
+                        ]
+                    },
+                    {
+                        question: "How do you feel about changes in your routine?",
+                        options: [
+                            { text: "Very flexible, I adapt easily to changes", score: 1 },
+                            { text: "Somewhat flexible, minor changes are okay", score: 2 },
+                            { text: "Neutral, depends on the situation", score: 3 },
+                            { text: "Somewhat rigid, I prefer sticking to routines", score: 4 },
+                            { text: "Very rigid, changes cause significant distress", score: 5 }
+                        ]
+                    },
+                    {
+                        question: "How do you experience sensory stimuli (sounds, lights, textures)?",
+                        options: [
+                            { text: "Very comfortable with all types of stimuli", score: 1 },
+                            { text: "Mostly comfortable, occasional sensitivity", score: 2 },
+                            { text: "Moderate sensitivity to certain stimuli", score: 3 },
+                            { text: "Often sensitive to many types of stimuli", score: 4 },
+                            { text: "Extremely sensitive to most sensory stimuli", score: 5 }
+                        ]
+                    },
+                    {
+                        question: "How do you feel about social gatherings?",
+                        options: [
+                            { text: "Very comfortable, I enjoy them greatly", score: 1 },
+                            { text: "Somewhat comfortable, I can participate well", score: 2 },
+                            { text: "Neutral, depends on the situation", score: 3 },
+                            { text: "Somewhat uncomfortable, I prefer small groups", score: 4 },
+                            { text: "Very uncomfortable, I avoid them when possible", score: 5 }
+                        ]
+                    },
+                    {
+                        question: "How do you handle understanding others' emotions?",
+                        options: [
+                            { text: "Very easily, I can read emotions naturally", score: 1 },
+                            { text: "Mostly easily, with occasional difficulty", score: 2 },
+                            { text: "Sometimes challenging, I need to think about it", score: 3 },
+                            { text: "Often difficult, I miss subtle cues", score: 4 },
+                            { text: "Very difficult, I struggle to understand emotions", score: 5 }
+                        ]
+                    },
+                    {
+                        question: "How do you feel about small talk?",
+                        options: [
+                            { text: "Very comfortable, I enjoy casual conversation", score: 1 },
+                            { text: "Somewhat comfortable, I can engage in it", score: 2 },
+                            { text: "Neutral, I can do it but prefer deeper topics", score: 3 },
+                            { text: "Somewhat uncomfortable, I find it challenging", score: 4 },
+                            { text: "Very uncomfortable, I avoid it completely", score: 5 }
+                        ]
+                    },
+                    {
+                        question: "How do you handle repetitive behaviors or interests?",
+                        options: [
+                            { text: "Rarely engage in repetitive behaviors", score: 1 },
+                            { text: "Occasionally have specific interests", score: 2 },
+                            { text: "Sometimes have focused interests", score: 3 },
+                            { text: "Often have intense, specific interests", score: 4 },
+                            { text: "Very frequently engage in repetitive behaviors", score: 5 }
+                        ]
+                    },
+                    {
+                        question: "How do you process information in conversations?",
+                        options: [
+                            { text: "Very quickly, I understand immediately", score: 1 },
+                            { text: "Quickly, with occasional need for clarification", score: 2 },
+                            { text: "At a moderate pace, sometimes need repetition", score: 3 },
+                            { text: "Slowly, often need things explained", score: 4 },
+                            { text: "Very slowly, I need detailed explanations", score: 5 }
+                        ]
+                    },
+                    {
+                        question: "How do you feel about physical contact?",
+                        options: [
+                            { text: "Very comfortable with all types of touch", score: 1 },
+                            { text: "Mostly comfortable, with some preferences", score: 2 },
+                            { text: "Moderate comfort, depends on the situation", score: 3 },
+                            { text: "Often uncomfortable with physical contact", score: 4 },
+                            { text: "Very uncomfortable with most physical contact", score: 5 }
+                        ]
+                    },
+                    {
+                        question: "How do you handle understanding sarcasm or jokes?",
+                        options: [
+                            { text: "Very easily, I understand all types of humor", score: 1 },
+                            { text: "Mostly easily, I get most jokes", score: 2 },
+                            { text: "Sometimes challenging, I miss some jokes", score: 3 },
+                            { text: "Often difficult, I take things literally", score: 4 },
+                            { text: "Very difficult, I rarely understand sarcasm", score: 5 }
+                        ]
+                    }
+                ],
+                calculateResult: (score) => {
+                    if (score >= 10 && score <= 20) return "Low likelihood of autism traits.";
+                    if (score >= 21 && score <= 35) return "Some traits present, worth further exploration.";
+                    return "Significant traits present, consider consulting with a healthcare professional.";
+                },
+                disclaimer: "This is not a diagnostic tool. If you have concerns, please consult with a qualified healthcare professional."
+            },
+            adhd: {
+                title: "ADHD Self-Assessment",
+                description: "This assessment helps identify traits commonly associated with Attention Deficit Hyperactivity Disorder (ADHD).",
+                questions: [
+                    {
+                        question: "How often do you have difficulty staying focused on tasks?",
+                        options: [
+                            { text: "Rarely or never", score: 1 },
+                            { text: "Sometimes", score: 2 },
+                            { text: "Often", score: 3 },
+                            { text: "Very often", score: 4 }
+                        ]
+                    },
+                    {
+                        question: "How often do you feel restless or fidgety?",
+                        options: [
+                            { text: "Rarely or never", score: 1 },
+                            { text: "Sometimes", score: 2 },
+                            { text: "Often", score: 3 },
+                            { text: "Very often", score: 4 }
+                        ]
+                    },
+                    {
+                        question: "How often do you have trouble organizing tasks?",
+                        options: [
+                            { text: "Rarely or never", score: 1 },
+                            { text: "Sometimes", score: 2 },
+                            { text: "Often", score: 3 },
+                            { text: "Very often", score: 4 }
+                        ]
+                    },
+                    {
+                        question: "How often do you forget important appointments or deadlines?",
+                        options: [
+                            { text: "Rarely or never", score: 1 },
+                            { text: "Sometimes", score: 2 },
+                            { text: "Often", score: 3 },
+                            { text: "Very often", score: 4 }
+                        ]
+                    },
+                    {
+                        question: "How often do you have difficulty waiting your turn?",
+                        options: [
+                            { text: "Rarely or never", score: 1 },
+                            { text: "Sometimes", score: 2 },
+                            { text: "Often", score: 3 },
+                            { text: "Very often", score: 4 }
+                        ]
+                    },
+                    {
+                        question: "How often do you interrupt others during conversations?",
+                        options: [
+                            { text: "Rarely or never", score: 1 },
+                            { text: "Sometimes", score: 2 },
+                            { text: "Often", score: 3 },
+                            { text: "Very often", score: 4 }
+                        ]
+                    },
+                    {
+                        question: "How often do you have trouble completing tasks?",
+                        options: [
+                            { text: "Rarely or never", score: 1 },
+                            { text: "Sometimes", score: 2 },
+                            { text: "Often", score: 3 },
+                            { text: "Very often", score: 4 }
+                        ]
+                    },
+                    {
+                        question: "How often do you feel easily distracted?",
+                        options: [
+                            { text: "Rarely or never", score: 1 },
+                            { text: "Sometimes", score: 2 },
+                            { text: "Often", score: 3 },
+                            { text: "Very often", score: 4 }
+                        ]
+                    },
+                    {
+                        question: "How often do you have difficulty following through on instructions?",
+                        options: [
+                            { text: "Rarely or never", score: 1 },
+                            { text: "Sometimes", score: 2 },
+                            { text: "Often", score: 3 },
+                            { text: "Very often", score: 4 }
+                        ]
+                    },
+                    {
+                        question: "How often do you have trouble staying seated when expected?",
+                        options: [
+                            { text: "Rarely or never", score: 1 },
+                            { text: "Sometimes", score: 2 },
+                            { text: "Often", score: 3 },
+                            { text: "Very often", score: 4 }
+                        ]
+                    }
+                ],
+                calculateResult: (score) => {
+                    if (score <= 15) return "Low likelihood of ADHD traits.";
+                    if (score <= 25) return "Some traits present, worth further exploration.";
+                    return "Significant traits present, consider consulting with a healthcare professional.";
+                },
+                disclaimer: "This is not a diagnostic tool. If you have concerns, please consult with a qualified healthcare professional."
+            },
+            mbti: {
+                title: "Myers-Briggs Personality Test",
+                description: "This assessment helps identify your personality type based on the Myers-Briggs Type Indicator (MBTI).",
+                questions: [
+                    {
+                        question: "How do you prefer to spend your free time?",
+                        options: [
+                            { text: "With a large group of friends", score: "E" },
+                            { text: "With a few close friends", score: "I" },
+                            { text: "Alone, doing my own thing", score: "I" },
+                            { text: "In social activities with others", score: "E" }
+                        ]
+                    },
+                    {
+                        question: "When making decisions, you tend to:",
+                        options: [
+                            { text: "Focus on facts and data", score: "S" },
+                            { text: "Consider possibilities and patterns", score: "N" },
+                            { text: "Look for practical solutions", score: "S" },
+                            { text: "Explore theoretical concepts", score: "N" }
+                        ]
+                    },
+                    {
+                        question: "In a conflict, you are more likely to:",
+                        options: [
+                            { text: "Consider everyone's feelings", score: "F" },
+                            { text: "Focus on what's fair and logical", score: "T" },
+                            { text: "Seek harmony and understanding", score: "F" },
+                            { text: "Analyze the situation objectively", score: "T" }
+                        ]
+                    },
+                    {
+                        question: "You prefer to:",
+                        options: [
+                            { text: "Have a structured schedule", score: "J" },
+                            { text: "Keep plans flexible", score: "P" },
+                            { text: "Make decisions quickly", score: "J" },
+                            { text: "Keep options open", score: "P" }
+                        ]
+                    },
+                    {
+                        question: "At work, you are more:",
+                        options: [
+                            { text: "Organized and methodical", score: "J" },
+                            { text: "Adaptable and spontaneous", score: "P" },
+                            { text: "Detail-oriented", score: "S" },
+                            { text: "Big-picture focused", score: "N" }
+                        ]
+                    },
+                    {
+                        question: "When solving problems, you:",
+                        options: [
+                            { text: "Use past experiences", score: "S" },
+                            { text: "Consider new possibilities", score: "N" },
+                            { text: "Follow established methods", score: "S" },
+                            { text: "Try innovative approaches", score: "N" }
+                        ]
+                    },
+                    {
+                        question: "In social situations, you:",
+                        options: [
+                            { text: "Enjoy being the center of attention", score: "E" },
+                            { text: "Prefer to observe and listen", score: "I" },
+                            { text: "Take initiative in conversations", score: "E" },
+                            { text: "Wait for others to approach you", score: "I" }
+                        ]
+                    },
+                    {
+                        question: "When making important decisions, you:",
+                        options: [
+                            { text: "Consider the impact on others", score: "F" },
+                            { text: "Focus on logical outcomes", score: "T" },
+                            { text: "Weigh emotional factors", score: "F" },
+                            { text: "Analyze pros and cons", score: "T" }
+                        ]
+                    },
+                    {
+                        question: "You prefer to work:",
+                        options: [
+                            { text: "In a team environment", score: "E" },
+                            { text: "Independently", score: "I" },
+                            { text: "With clear guidelines", score: "J" },
+                            { text: "With flexibility", score: "P" }
+                        ]
+                    },
+                    {
+                        question: "When learning something new, you:",
+                        options: [
+                            { text: "Follow step-by-step instructions", score: "S" },
+                            { text: "Look for underlying principles", score: "N" },
+                            { text: "Focus on practical applications", score: "S" },
+                            { text: "Explore theoretical concepts", score: "N" }
+                        ]
+                    }
+                ],
+                calculateResult: (answers) => {
+                    const counts = {
+                        E: 0, I: 0,
+                        S: 0, N: 0,
+                        T: 0, F: 0,
+                        J: 0, P: 0
+                    };
+                    
+                    answers.forEach(answer => {
+                        counts[answer]++;
+                    });
+                    
+                    const type = [
+                        counts.E > counts.I ? 'E' : 'I',
+                        counts.S > counts.N ? 'S' : 'N',
+                        counts.T > counts.F ? 'T' : 'F',
+                        counts.J > counts.P ? 'J' : 'P'
+                    ].join('');
+                    
+                    const descriptions = {
+                        'ISTJ': 'The Inspector: Practical, responsible, and organized',
+                        'ISFJ': 'The Protector: Caring, loyal, and traditional',
+                        'INFJ': 'The Counselor: Insightful, creative, and idealistic',
+                        'INTJ': 'The Mastermind: Strategic, independent, and innovative',
+                        'ISTP': 'The Craftsman: Analytical, practical, and spontaneous',
+                        'ISFP': 'The Composer: Artistic, sensitive, and peaceful',
+                        'INFP': 'The Healer: Idealistic, creative, and compassionate',
+                        'INTP': 'The Architect: Logical, innovative, and theoretical',
+                        'ESTP': 'The Dynamo: Energetic, practical, and spontaneous',
+                        'ESFP': 'The Performer: Enthusiastic, friendly, and fun-loving',
+                        'ENFP': 'The Champion: Creative, enthusiastic, and optimistic',
+                        'ENTP': 'The Visionary: Innovative, curious, and adaptable',
+                        'ESTJ': 'The Supervisor: Organized, practical, and traditional',
+                        'ESFJ': 'The Provider: Caring, social, and responsible',
+                        'ENFJ': 'The Teacher: Charismatic, idealistic, and organized',
+                        'ENTJ': 'The Commander: Strategic, confident, and decisive'
+                    };
+                    
+                    return `Your personality type is ${type}: ${descriptions[type]}`;
+                },
+                disclaimer: "This is a simplified version of the MBTI assessment. For a more accurate assessment, consider taking the official MBTI test administered by a certified practitioner."
+            }
+        };
+
+        let currentTest = null;
+        let currentQuestion = 0;
+        let answers = [];
+
+        function selectTest(testType) {
+            currentTest = testType;
+            document.getElementById('test-selection').style.display = 'none';
+            document.getElementById('test-container').style.display = 'block';
+            document.getElementById('test-title').textContent = tests[testType].title;
+            document.getElementById('test-description').textContent = tests[testType].description;
+            document.getElementById('disclaimer').textContent = tests[testType].disclaimer;
+            initializeQuestions();
+        }
+
+        function createQuestionElement(question, index) {
+            const div = document.createElement('div');
+            div.className = 'question-container';
+            div.id = `question-${index}`;
+            
+            const questionText = document.createElement('h3');
+            questionText.textContent = `Question ${index + 1}: ${question.question}`;
+            div.appendChild(questionText);
+
+            const optionsDiv = document.createElement('div');
+            optionsDiv.className = 'options';
+
+            question.options.forEach((option, optionIndex) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'option';
+                
+                const input = document.createElement('input');
+                input.type = 'radio';
+                input.name = `question-${index}`;
+                input.value = option.score;
+                input.id = `q${index}-o${optionIndex}`;
+                
+                const label = document.createElement('label');
+                label.htmlFor = `q${index}-o${optionIndex}`;
+                label.textContent = option.text;
+                
+                optionDiv.appendChild(input);
+                optionDiv.appendChild(label);
+                optionsDiv.appendChild(optionDiv);
+            });
+
+            div.appendChild(optionsDiv);
+
+            const button = document.createElement('button');
+            button.textContent = index === tests[currentTest].questions.length - 1 ? 'See Results' : 'Next Question';
+            button.onclick = () => handleAnswer(index);
+            div.appendChild(button);
+
+            return div;
+        }
+
+        function initializeQuestions() {
+            const container = document.getElementById('questions-container');
+            container.innerHTML = '';
+            tests[currentTest].questions.forEach((question, index) => {
+                container.appendChild(createQuestionElement(question, index));
+            });
+            document.getElementById('question-0').classList.add('active');
+            updateProgressBar();
+        }
+
+        function handleAnswer(index) {
+            const selectedOption = document.querySelector(`input[name="question-${index}"]:checked`);
+            if (!selectedOption) {
+                alert('Please select an answer before proceeding.');
+                return;
+            }
+
+            answers[index] = selectedOption.value;
+            
+            if (index === tests[currentTest].questions.length - 1) {
+                showResults();
+            } else {
+                document.getElementById(`question-${index}`).classList.remove('active');
+                document.getElementById(`question-${index + 1}`).classList.add('active');
+                updateProgressBar();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('questions-container').style.display = 'none';
+            document.getElementById('results').style.display = 'block';
+            
+            let resultText = '';
+            if (currentTest === 'mbti') {
+                resultText = tests[currentTest].calculateResult(answers);
+            } else {
+                const totalScore = answers.reduce((sum, score) => sum + parseInt(score), 0);
+                resultText = tests[currentTest].calculateResult(totalScore);
+            }
+            
+            document.getElementById('resultText').textContent = resultText;
+        }
+
+        function updateProgressBar() {
+            const progress = ((currentQuestion + 1) / tests[currentTest].questions.length) * 100;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+        }
+
+        function restartAssessment() {
+            currentQuestion = 0;
+            answers = [];
+            document.getElementById('test-selection').style.display = 'block';
+            document.getElementById('test-container').style.display = 'none';
+            document.getElementById('questions-container').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
